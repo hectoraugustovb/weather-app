@@ -7,7 +7,10 @@ export async function getWeather(lat, lon, daysToGet) {
         .get(
             `https://api.weatherapi.com/v1/history.json?key=${apiKey}&q=${lat},${lon}&lang=pt&dt=${daysToGet.daysBefore}&end_dt=${daysToGet.yesterday}`
         )
-        .catch(error => console.error('Weather/Error:', error))
+        .catch(error => {
+            console.warn('Weather/History not available (free plan limitation):', error?.response?.data?.error?.message || error.message);
+            return null;
+        })
 
     const forecast = await axios
         .get(
@@ -15,8 +18,10 @@ export async function getWeather(lat, lon, daysToGet) {
         )
         .catch(error => console.error('Weather/Error:', error))
 
+    const historyDays = history?.data?.forecast?.forecastday || [];
+
     return {
-        history: history.data.forecast.forecastday,
+        history: historyDays,
         forecast: forecast.data.forecast.forecastday.slice(1),
         current: {
             ...forecast.data.current,
@@ -31,4 +36,4 @@ export async function getWeather(lat, lon, daysToGet) {
             timezone: forecast.data.location.tz_id,
         }
     }
-}
+}
